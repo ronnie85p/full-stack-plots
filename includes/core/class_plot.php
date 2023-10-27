@@ -32,6 +32,21 @@ class Plot {
         }
     }
 
+    public static function plots_count(string $where = '') 
+    {
+        $where = empty($where) ? '' : " WHERE $where";
+
+        $q = DB::query("SELECT COUNT(*) as count FROM `plots`$where") or die (DB::error());
+        $res = DB::fetch_row($q);
+
+        return (int) $res['count'];
+    }
+
+    public static function plot_exists($plot_id)
+    {
+        return self::plots_count("plot_id='$plot_id'") > 0;
+    }
+
     public static function plots_list($d = []) {
         // vars
         $search = isset($d['search']) && trim($d['search']) ? $d['search'] : '';

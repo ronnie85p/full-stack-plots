@@ -1,0 +1,63 @@
+version: "3.2"
+services:
+  #Webserver (Apache + php) Service
+  webserver:
+    build:
+      context: .
+      dockerfile: "Dockerfile"
+    ports:
+      - "88:80"
+    volumes:
+      - ./:/var/www/html/
+      - ./docker/apache/conf/:/etc/apache2/sites-available/
+      - ./docker/apache/logs/:/var/log/apache2/
+      - ./docker/php/conf/php.ini-development:/usr/local/etc/php/php.ini-development
+    depends_on:
+      - mysql
+    networks:
+      - frontend
+      - backend
+
+  #MySQL Service
+  mysql:
+    image: mysql:5.7.22
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: test
+      #MYSQL_ROOT_PASSWORD: 1
+      MYSQL_ALLOW_EMPTY_PASSWORD: yes
+      #MYSQL_SOCKET_DIR: /var/run/mysqld
+      SERVICE_NAME: mysql
+      SERVICE_TAGS: dev
+    volumes:
+      - mysqldb:/var/lib/mysql/
+      - ./docker/mysql/conf/:/etc/mysql/conf.d/
+      - ./docker/mysql/logs/:/var/log/mysql/
+    networks:
+      - backend
+
+  #PHPMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_HOST=mysql
+    depends_on:
+      - mysql
+    networks:
+      - frontend
+      - backend
+
+#Docker Networks
+networks:
+  frontend:
+  backend:
+
+#Volumes
+volumes:
+  mysqldb:
+    driver: local

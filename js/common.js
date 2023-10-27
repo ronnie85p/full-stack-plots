@@ -115,7 +115,7 @@ let common = {
 
     search_do: (act) => {
         // vars
-        let data = { search: gv('search') };
+        let data = { search: gv('search'), search_by: qs('[name="search_by"]:checked').value };
         let location = { dpt: 'search', act: act };
         // call
         request({location: location, data: data}, (result) => {
@@ -157,6 +157,62 @@ let common = {
             html('table', result.html);
         });
     },
+
+    // users
+    user_edit_window: (user_id, e) => {
+        // actions
+        cancel_event(e);
+        common.menu_popup_hide_all('all');
+        // vars
+        let data = {user_id: user_id};
+        let location = {dpt: 'user', act: 'edit_window'};
+        // call
+        request({location: location, data: data}, (result) => {
+            common.modal_show(400, result.html);
+        });
+    },
+
+    user_edit_update: (user_id = 0) => {
+        // vars
+        let data = {
+            user_id: user_id,
+            first_name: gv('first_name'),
+            last_name: gv('last_name'),
+            phone: gv('phone'),
+            email: gv('email'),
+            plots: gv('plots'),
+            offset: global.offset
+        };
+        let location = {dpt: 'user', act: 'edit_update'};
+        // call
+        request({location: location, data: data}, (result) => {
+            common.modal_hide();
+            html('table', result.html);
+        });
+    },
+
+    user_delete_window: (user_id) => {
+        user_id = parseInt(user_id);
+        user_id = isNaN(user_id) ? 0 : Math.abs(user_id);
+        if (!user_id) return;
+
+        let location = {dpt: 'user', act: 'delete_window'};
+        request({location: location, data: {user_id, offset: global.offset}}, (result) => {
+            common.modal_show(400, result.html);
+        });
+    },
+
+    user_delete: (user_id, event) => {
+        user_id = parseInt(user_id);
+        user_id = isNaN(user_id) ? 0 : Math.abs(user_id);
+        if (!user_id) return;
+
+        let location = {dpt: 'user', act: 'delete'};
+        request({location: location, data: {user_id, offset: global.offset}}, (result) => {
+            common.modal_hide();
+            html('table', result.html);
+        });
+    }
 }
 
 add_event(document, 'DOMContentLoaded', common.init);

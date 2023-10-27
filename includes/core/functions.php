@@ -106,3 +106,51 @@ function paginator($total, $offset, $q, $path, &$out) {
         }
     }
 }
+
+function validate_email($value) {
+    return empty($value) || preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$/', $value);
+}
+
+function validate_phone($value) {
+    return empty($value) || preg_match('/^\d{12}$/', $value);
+}
+
+function validate_data($validation, $d, &$errors) {
+    $errors = [];
+
+    foreach ($validation as $value) {
+        $composite = explode(':', $value);
+        $field = $composite[0];
+        $value = $d[$field];
+
+        for ($i = 1; $i < count($composite); $i++) {
+            switch ($composite[$i]) {
+                case 'required':
+                    if (empty($value)) {
+                        $errors[$field] = 'Заполните поле';
+                        break 2;
+                    }
+
+                    break;
+
+                case 'email':
+                    if (!validate_email($value)) {
+                        $errors[$field] = "Не корректный $field.";
+                        break 2;
+                    }
+
+                    break;
+
+                case 'phone':
+                    if (!validate_phone($value)) {
+                        $errors[$field] = "Не корректный $field.";
+                        break 2;
+                    }
+
+                    break;
+            }
+        }
+    }
+
+    return empty($errors);
+}

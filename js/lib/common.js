@@ -88,17 +88,64 @@ function set_style(el, name, value) {
     el.style[name] = is_number && !(/font-?weight|line-?height|opacity|z-?index|zoom/i).test(name) ? value + 'px' : value;
 }
 
+// ERRORS
+let _errors = {};
+
+function errors_feedback_set(el, msg) {
+    let fb = qs('.error-feedback', el.parentNode);
+    if (fb) {
+        fb.innerText = msg;
+    }
+}
+
+function errors_reset() {
+    if (!Object.keys(_errors).length) return;
+    for (let key in _errors) {
+        let el = ge(key);
+        if (el) {
+            el.classList.remove('error');
+            errors_feedback_set(el, '');
+        }
+    }
+
+    _errors = {};
+}
+
+function errors_set(errors) {
+    for (let key in errors) {
+        let el = ge(key);
+        if (el) {
+            el.classList.add('error');
+            errors_feedback_set(el, errors[key]);
+        }
+    }
+
+    _errors = errors;
+}
+
 // REQUESTS
 
-function request(data, callback) {
+function request(data, callback, errorCallback) {
     let xhr = new XMLHttpRequest();
     if (!xhr) return;
     xhr.open('POST', '/call.php', true);
     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+    errors_reset();
     xhr.send(request_serialize(data));
     xhr.onreadystatechange = () => {
         if (xhr.readyState !== 4) return;
-        if (xhr.status === 200) callback(JSON.parse(xhr.responseText));
+        if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText); 
+            if (response.errors && Object.keys(response.errors).length) {
+                errors_set(response.errors);
+
+                errorCallback && errorCallback(response); 
+                return;
+            }
+
+            callback(response);
+        }
         xhr = null;
     }
 }
